@@ -1,0 +1,75 @@
+#! /usr/bin/env zsh
+
+# tm -- tmux wrapper
+# Copyright (C) 2012 Michael Clarke
+# <clarkema -at- clarkema.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License Version 3, as
+# published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+zparseopts -E -D -A opts b x d t:
+
+kill_defunct()
+{
+    local -a doomed
+    doomed=$(tmux ls -F '#{session_attached}:#{session_name}' 2> /dev/null \
+        | egrep '^0:[0-9]{14}' | cut -d: -f 2 )
+    for doomed_session_id in ${(f)doomed}; do
+        tmux kill-session -t $doomed_session_id
+    done
+}
+
+session_attached_p()
+{
+    (( $(tmux ls -F '#{session_attached}:#{session_name}' \
+        | fgrep $1 | cut -d: -f 1) == 1 ))
+}
+
+kill_defunct
+
+# No options; just list current sessions.
+if (( ${#@} == 0 )); then
+    tmux ls 2> /dev/null
+
+# tm -x foo; analogous to screen -x.  Create a second session that 
+# contains the same windows as session foo.
+elif (( ${+opts[-x]} )); then
+    session_id=`date +%Y%m%d%H%M%S`
+    base_session=$1
+    tmux new-session -s $session_id -t $base_session
+    tmux kill-session -t $session_id
+
+# tm -b foo bar; like git co -b foo bar
+elif (( ${+opts[-b]} )); then
+    session_id=$1
+    base_session=$2
+    tmux new-session -s $session_id -t $base_session
+
+# Kill specified session if it's not attached.
+elif (( ${+opts[-d]} )); then
+    if session_attached_p $1; then
+        echo "Not killing attached session."
+    else
+        tmux kill-session -t $1
+    fi
+
+# Otherwise, DWIM(tm) with the specified session name.  Similar to
+# screen -DR foo, but won't detach the session from other terminals.
+elif tmux has-session -t $1 2> /dev/null; then
+    exec tmux attach -t $1
+elif (( ${#@} == 1 )); then
+    if (( ${+opts[-t]} )); then
+        eval "template_${opts[-t]}"
+    else
+        exec tmux new-session -s $1
+    fi
+fi
