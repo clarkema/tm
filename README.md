@@ -19,7 +19,7 @@ Cloning and sharing sessions
     to work individually in a shared set of windows.
 
     The `-x` option allows the independant movement described above
-    by created a temporary copy of the named session, which is
+    by creating a temporary copy of the named session, which is
     automatically destroyed after the client disconnects.
 
  * `tm -b bar foo`  Similarly to the `-x` option above, this creates
