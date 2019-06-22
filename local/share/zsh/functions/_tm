@@ -1,0 +1,10 @@
+#compdef tm
+
+function _tm
+{
+    local -a names
+
+    if names=( $(tmux list-sessions -F "#{session_name}" 2> /dev/null) ); then
+        compadd $names
+    fi
+}

@@ -18,7 +18,7 @@ Cloning and sharing sessions
     can be very convenient; other times you want two clients to be able
     to work individually in a shared set of windows.
 
-    The `-x` option allows the independant movement described above
+    The `-x` option allows the independent movement described above
     by creating a temporary copy of the named session, which is
     automatically destroyed after the client disconnects.
 
