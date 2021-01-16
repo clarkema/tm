@@ -1,7 +1,7 @@
 #! /usr/bin/env zsh
 
 # tm -- tmux wrapper
-# Copyright (C) 2012 Michael Clarke
+# Copyright (C) 2012, 2021 Michael Clarke
 # <clarkema -at- clarkema.org>
 #
 # This program is free software: you can redistribute it and/or modify
@@ -38,7 +38,11 @@ kill_defunct
 
 # No options; just list current sessions.
 if (( ${#@} == 0 )); then
-    tmux ls 2> /dev/null
+    if [ -z "$TMUX" ]; then
+        tmux attach\; choose-tree
+    else
+        tmux choose-tree
+    fi
 
 # tm -x foo; analogous to screen -x.  Create a second session that 
 # contains the same windows as session foo.
@@ -65,11 +69,20 @@ elif (( ${+opts[-d]} )); then
 # Otherwise, DWIM(tm) with the specified session name.  Similar to
 # screen -DR foo, but won't detach the session from other terminals.
 elif tmux has-session -t $1 2> /dev/null; then
-    exec tmux attach -t $1
+    if [ -z "$TMUX" ]; then
+        exec tmux attach -t $1
+    else
+        exec tmux switch-client -t $1
+    fi
 elif (( ${#@} == 1 )); then
     if (( ${+opts[-t]} )); then
         eval "template_${opts[-t]}"
     else
-        exec tmux new-session -s $1
+        if [ -z "$TMUX" ]; then
+            exec tmux new-session -s $1
+        else
+            tmux new-session -A -d -s $1
+            exec tmux switch-client -t $1
+        fi
     fi
 fi
