@@ -1,7 +1,7 @@
 #! /usr/bin/env zsh
 
 # tm -- tmux wrapper
-# Copyright (C) 2012, 2021 Michael Clarke
+# Copyright (C) 2012, 2021, 2022 Michael Clarke
 # <clarkema -at- clarkema.org>
 #
 # This program is free software: you can redistribute it and/or modify
@@ -22,7 +22,7 @@ kill_defunct()
 {
     local -a doomed
     doomed=$(tmux ls -F '#{session_attached}:#{session_name}' 2> /dev/null \
-        | egrep '^0:[0-9]{14}' | cut -d: -f 2 )
+        | grep -E '^0:[0-9]{14}' | cut -d: -f 2 )
     for doomed_session_id in ${(f)doomed}; do
         tmux kill-session -t $doomed_session_id
     done
